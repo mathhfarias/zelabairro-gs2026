@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Painel interno{% endblock %}
+{% block content %}
+<div class="admin-head"><div><div class="eyebrow">GERENCIAMENTO DE TESTES</div><h1>Painel interno</h1><p class="lede">Últimas 200 ocorrências registradas.</p></div><div class="admin-actions"><a class="btn btn-secondary" href="{{ url_for('site.export_csv') }}">Exportar CSV</a><form action="{{ url_for('site.admin_logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-quiet" type="submit">Sair</button></form></div></div>
+{% if items %}
+<div class="table-wrap"><table><caption class="sr-only">Ocorrências e controle do status interno</caption><thead><tr><th scope="col">Protocolo</th><th scope="col">Local</th><th scope="col">Categoria</th><th scope="col">Status interno</th></tr></thead><tbody>
+{% for item in items %}<tr><td><a href="{{ url_for('site.occurrence', occurrence_id=item.id) }}" class="table-link">{{ item.id }}</a></td><td>{{ item.local }}</td><td>{{ categories[item.categoria] }}</td><td><form class="status-form" action="{{ url_for('site.admin_update', occurrence_id=item.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label class="sr-only" for="status-{{ loop.index }}">Status de {{ item.id }}</label><select id="status-{{ loop.index }}" name="status">{% for code, label in statuses.items() %}<option value="{{ code }}" {% if item.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn btn-small" type="submit">Salvar</button></form></td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<div class="empty"><h2>Nenhuma ocorrência ainda</h2><p>Os novos registros aparecerão aqui após serem enviados.</p></div>{% endif %}
+{% endblock %}

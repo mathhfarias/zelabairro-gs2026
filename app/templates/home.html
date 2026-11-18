@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Início{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="eyebrow"><span class="pulse"></span> CITIZENTECH · MVP ACADÊMICO</div>
+  <h1>Uma cidade melhor começa com <span>um registro.</span></h1>
+  <p>Encontrou uma sinalização danificada ou um problema em um espaço público? Organize o relato, receba um protocolo e acompanhe o status dentro do ZelaBairro.</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('site.register') }}">Registrar ocorrência <span aria-hidden="true">→</span></a>
+    <a class="btn btn-secondary" href="{{ url_for('site.search') }}">Consultar protocolo</a>
+  </div>
+  <div class="disclaimer">Demonstração acadêmica: o projeto não encaminha solicitações a órgãos públicos.</div>
+</section>
+<section class="steps" aria-label="Como funciona">
+  <div class="section-heading"><span class="eyebrow">SIMPLES E TRANSPARENTE</span><h2>Como funciona</h2></div>
+  <div class="cards">
+    <article class="feature-card"><div class="card-icon" aria-hidden="true">01</div><h3>Conte o problema</h3><p>Informe o local, escolha uma categoria e descreva o que aconteceu.</p></article>
+    <article class="feature-card"><div class="card-icon" aria-hidden="true">02</div><h3>Receba seu protocolo</h3><p>O registro é armazenado no sistema e recebe uma referência única.</p></article>
+    <article class="feature-card"><div class="card-icon" aria-hidden="true">03</div><h3>Acompanhe o registro</h3><p>Consulte o status interno e veja as atualizações realizadas pela equipe de teste.</p></article>
+  </div>
+</section>
+<section class="callout"><div><h2>Você observou um problema no seu bairro?</h2><p>O primeiro passo é descrevê-lo de maneira clara.</p></div><a class="btn btn-light" href="{{ url_for('site.register') }}">Começar registro →</a></section>
+{% endblock %}

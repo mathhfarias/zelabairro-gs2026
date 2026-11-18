@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Não encontrado{% endblock %}
+{% block content %}
+<div class="content-narrow error-page"><span class="eyebrow">ERRO 404</span><h1>Não encontramos este registro.</h1><p class="lede">Confira o protocolo informado ou volte à página inicial.</p><a class="btn btn-primary" href="{{ url_for('site.search') }}">Consultar novamente →</a></div>
+{% endblock %}

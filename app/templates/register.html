@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Registrar ocorrência{% endblock %}
+{% block content %}
+<div class="content-narrow">
+  <a class="breadcrumb" href="{{ url_for('site.home') }}">← Voltar ao início</a>
+  <div class="eyebrow">NOVO REGISTRO</div>
+  <h1>Registrar ocorrência</h1>
+  <p class="lede">Preencha os dados abaixo. Não inclua informações pessoais ou imagens no relato.</p>
+  {% if errors %}<div class="notice notice-error" role="alert"><strong>Verifique os campos:</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+  <form class="form-panel" method="post" action="{{ url_for('site.register') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-field"><label for="local">Local da ocorrência <span class="required">*</span></label><p class="field-hint" id="local-hint">Ex.: Praça Central, perto da entrada principal.</p><input id="local" name="local" maxlength="120" minlength="3" required aria-describedby="local-hint" value="{{ fields.local }}" placeholder="Onde está o problema?"></div>
+    <div class="form-field"><label for="categoria">Categoria <span class="required">*</span></label><select id="categoria" name="categoria" required><option value="">Selecione uma categoria</option>{% for code, name in categories.items() %}<option value="{{ code }}" {% if fields.categoria == code %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+    <div class="form-field"><label for="descricao">Descrição do problema <span class="required">*</span></label><p class="field-hint" id="descricao-hint">Explique o que está danificado e como isso afeta o uso do espaço. Entre 10 e 1.000 caracteres.</p><textarea id="descricao" name="descricao" rows="6" minlength="10" maxlength="1000" required aria-describedby="descricao-hint" placeholder="Ex.: Placa de sinalização com suporte quebrado, dificultando a leitura.">{{ fields.descricao }}</textarea></div>
+    <div class="privacy-note">Não pedimos nome, CPF, e-mail nem endereço residencial. O registro é armazenado apenas para a demonstração acadêmica.</div>
+    <button class="btn btn-primary" type="submit">Enviar ocorrência →</button>
+  </form>
+</div>
+{% endblock %}

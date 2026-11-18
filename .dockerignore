@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+.venv
+__pycache__
+*.pyc
+instance
+*.sqlite3
+tests
+*.md
+*.pdf
+*.zip
+.terraform
+*.tfstate*
+*.tfvars

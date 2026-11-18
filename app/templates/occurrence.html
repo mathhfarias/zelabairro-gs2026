@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Ocorrência {{ item.id }}{% endblock %}
+{% block content %}
+<div class="content-narrow">
+  <a class="breadcrumb" href="{{ url_for('site.search') }}">← Consultar outro protocolo</a>
+  <div class="eyebrow">REGISTRO LOCALIZADO</div><h1>Sua ocorrência</h1>
+  <p class="lede">Guarde este protocolo para consultar o acompanhamento interno.</p>
+  <div class="record-card">
+    <div class="record-head"><div><div class="field-hint">Protocolo</div><strong class="protocol">{{ item.id }}</strong></div><span class="status status-{{ item.status }}">{{ statuses[item.status] }}</span></div>
+    <dl class="record-details">
+      <div><dt>Local</dt><dd>{{ item.local }}</dd></div>
+      <div><dt>Categoria</dt><dd>{{ categories[item.categoria] }}</dd></div>
+      <div><dt>Descrição</dt><dd class="prewrap">{{ item.descricao }}</dd></div>
+      <div><dt>Registrada em (UTC)</dt><dd>{{ item.data.replace('T', ' ')[:19] }}</dd></div>
+      <div><dt>Última atualização (UTC)</dt><dd>{{ item.data_atualizacao.replace('T', ' ')[:19] }}</dd></div>
+    </dl>
+    <div class="privacy-note">O status é exclusivamente interno ao ZelaBairro. “Concluído” indica fechamento do registro no sistema, não que o problema foi fisicamente reparado.</div>
+  </div>
+  <div class="actions"><a class="btn btn-secondary" href="{{ url_for('site.search') }}">Consultar outro</a><a class="btn btn-primary" href="{{ url_for('site.register') }}">Nova ocorrência →</a></div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+rules:
+  - id: zelabairro-python-eval-dinamico
+    languages: [python]
+    severity: ERROR
+    message: "Evite eval(): ele pode executar expressoes inesperadas. Use parsing explicito."
+    pattern: eval(...)
+    metadata:
+      category: security
+      technology: [python]
+      confidence: HIGH

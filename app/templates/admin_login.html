@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Acesso interno{% endblock %}
+{% block content %}
+<div class="content-narrow"><div class="eyebrow">ÁREA RESTRITA</div><h1>Painel interno</h1><p class="lede">Somente a equipe de demonstração pode atualizar o status das ocorrências.</p>
+{% if not_configured %}<div class="notice notice-error" role="alert">O acesso administrativo não está configurado. Defina a variável de ambiente ADMIN_PASSWORD.</div>{% else %}
+<form class="form-panel" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="form-field"><label for="password">Senha da equipe</label><input id="password" name="password" type="password" autocomplete="current-password" required></div><button class="btn btn-primary" type="submit">Entrar →</button></form>
+{% endif %}</div>
+{% endblock %}

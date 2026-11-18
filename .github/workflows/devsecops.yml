@@ -1,0 +1,117 @@
+name: ZelaBairro - CI e DevSecOps
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Permissão mínima; nenhum job publica alterações no repositório.
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Testes Flask
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v6
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements.txt
+
+      - name: Testar sintaxe e jornadas do MVP
+        run: |
+          python -m compileall -q app tests wsgi.py
+          python -m unittest discover -s tests -v
+
+  gitleaks:
+    name: Gitleaks - segredos no Git
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Obter historico completo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detectar segredos sem expor valores
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+
+  semgrep:
+    name: Semgrep - analise estatica
+    runs-on: ubuntu-24.04
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v6
+
+      # Community Edition: regras da comunidade + regra local auditavel.
+      # --error faz o job falhar quando encontra um achado.
+      - name: Analisar seguranca do Python
+        run: semgrep scan --config p/python --config .semgrep/zelabairro.yml --error .
+
+  docker-trivy:
+    name: Docker build + Trivy
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v6
+
+      - name: Construir imagem sem segredos
+        run: docker build --tag zelabairro:${{ github.sha }} .
+
+      - name: Smoke test do container em producao
+        env:
+          TEST_IMAGE: zelabairro:${{ github.sha }}
+        run: |
+          set -euo pipefail
+          docker volume create zelabairro-ci-data >/dev/null
+          trap 'docker rm -f zelabairro-ci >/dev/null 2>&1 || true; docker volume rm zelabairro-ci-data >/dev/null 2>&1 || true' EXIT
+          TEST_SECRET="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+          docker run -d --name zelabairro-ci \
+            --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+            -p 127.0.0.1:8765:8000 \
+            -v zelabairro-ci-data:/data \
+            -e APP_ENV=production \
+            -e SECRET_KEY="$TEST_SECRET" \
+            -e ADMIN_PASSWORD='senha-descartavel-somente-ci' \
+            "$TEST_IMAGE" >/dev/null
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/health | grep -q '"status":"ok"'; then
+              echo 'Healthcheck HTTP OK - container executando'
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs zelabairro-ci
+          exit 1
+
+      - name: Trivy - CVEs altas ou criticas corrigiveis
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: zelabairro:${{ github.sha }}
+          scan-type: image
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
+  ci-validada:
+    name: Gate de qualidade - pronto para etapa de deploy
+    runs-on: ubuntu-24.04
+    needs: [unit-tests, gitleaks, semgrep, docker-trivy]
+    steps:
+      - name: Confirmar aprovacoes
+        run: echo 'Testes + Gitleaks + Semgrep + build Docker + Trivy aprovados. Deploy ainda nao configurado.'
