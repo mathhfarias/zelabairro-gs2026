@@ -178,3 +178,21 @@ jobs:
           done
           echo 'Healthcheck HTTPS falhou; consulte logs no App Service.'
           exit 1
+
+  deploy-render:
+    name: Deploy automatico Render
+    runs-on: ubuntu-24.04
+    needs: [publicar-imagem]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Disparar deploy apos verificacoes
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$RENDER_DEPLOY_HOOK_URL" || exit 1
+          curl --fail --silent --show-error \
+            --max-time 30 \
+            --request POST \
+            "$RENDER_DEPLOY_HOOK_URL" > /dev/null          
