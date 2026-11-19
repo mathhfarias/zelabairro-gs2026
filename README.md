@@ -200,3 +200,5 @@ Status permitidos: `pendente`, `em_analise`, `concluido`.
 - **Checklist de evidências:** [`docs/CONFERENCIA_ENTREGA.md`](docs/CONFERENCIA_ENTREGA.md).
 
 **Não implementado automaticamente:** criação de recursos Azure, vínculo de identidade OIDC no Entra, registro público do GHCR, inserção de secrets e execução real do monitoramento. Exigem conta, permissões e provas de execução do grupo.
+
+Deploy em nuvem com Terraform e CI/CD validado na GS 2026.2.
