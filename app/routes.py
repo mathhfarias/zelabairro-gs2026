@@ -31,7 +31,10 @@ def csrf_token():
 def csrf_valid():
     expected = session.get("csrf_token", "")
     supplied = request.form.get("csrf_token", "")
-    return bool(expected and supplied and hmac.compare_digest(expected, supplied))
+    if not expected or not supplied:
+    return False
+
+return hmac.compare_digest(expected, supplied)
 
 
 @bp.app_context_processor
