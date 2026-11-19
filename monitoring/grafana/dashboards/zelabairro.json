@@ -95,7 +95,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(zelabairro_http_server_errors_total[5m]))",
+          "expr": "sum(rate(zelabairro_http_server_errors_total[5m])) or vector(0)",
           "refId": "A",
           "legendFormat": "{{__name__}}"
         }

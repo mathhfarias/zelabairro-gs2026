@@ -22,3 +22,18 @@ monitoring/prometheus.yml
 monitoring/metrics_token
 monitoring/.env
 *.tfplan
+
+# Segredos locais
+monitoring/.env
+monitoring/metrics_token
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+
+# macOS
+.DS_Store
