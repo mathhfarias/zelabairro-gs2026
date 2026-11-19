@@ -27,3 +27,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "4", "--access-logfile", "-", "wsgi:app"]
 
 # GS 2026.2 - teste final de deploy automatico Render
+
+# GS 2026.2 - teste final de deploy automatico Render
