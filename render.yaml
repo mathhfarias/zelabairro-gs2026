@@ -1,0 +1,28 @@
+# Plano alternativo via Blueprint. Nao use junto com infra-render/ para criar outro serviço.
+services:
+- type: web
+  name: zelabairro-gs2026-mathh
+  runtime: docker
+  region: ohio
+  plan: starter
+  repo: https://github.com/mathhfarias/zelabairro-gs2026
+  branch: main
+  autoDeployTrigger: checksPass
+  healthCheckPath: /health
+  envVars:
+  - key: APP_ENV
+    value: production
+  - key: DATABASE_PATH
+    value: /data/zelabairro.sqlite3
+  - key: PORT
+    value: '8000'
+  - key: SECRET_KEY
+    generateValue: true
+  - key: ADMIN_PASSWORD
+    sync: false
+  - key: METRICS_TOKEN
+    generateValue: true
+  disk:
+    name: zelabairro-sqlite
+    mountPath: /data
+    sizeGB: 1
