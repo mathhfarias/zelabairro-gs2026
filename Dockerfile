@@ -4,6 +4,7 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends --only-upgrade zlib1g; \
     rm -rf /var/lib/apt/lists/*
+    
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DATABASE_PATH=/data/zelabairro.sqlite3 \
