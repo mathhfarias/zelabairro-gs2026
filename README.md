@@ -2,9 +2,9 @@
 
 > **Um só produto para as sete disciplinas.** Este repositório inicia a aplicação central utilizada por **Secure DevOps Tools & Cloud Computing** (Cleórbete Santos) e **Business Intelligence & Startup Development** (Henio Scheidt). As evidências e entregáveis de cada disciplina são distintos.
 
-**Status (v0.2 — 14/11/2026):** base funcional do MVP validada localmente pelo grupo; **CI de GitHub Actions e scanners escritos e prontos para executar após o push**, mas ainda **não verificados em GitHub**. **NÃO representa a entrega completa** de Secure DevOps nem de Startup. Terraform, deploy remoto e dashboards/alertas ainda devem ser implementados e demonstrados.
+**Status (v0.3 — 19/11/2026):** MVP validado localmente pelo grupo; **CI de GitHub Actions com testes, Gitleaks, Semgrep, Docker/Trivy e gate aprovados** conforme captura da execução #6 (commit `1b3cad7`). Esta extensão inclui **código preparado** de Terraform, publicação no GHCR, deploy OIDC e monitoramento, **ainda sem implantação Azure ou dashboard/alerta comprovados**. Não representa a conclusão automática das disciplinas.
 
-**Próxima ação:** siga [docs/GUIA_GITHUB_CI.md](docs/GUIA_GITHUB_CI.md) para publicar o **mesmo ZelaBairro** no GitHub, acompanhar o pipeline e coletar as evidências; confira [docs/EVIDENCIAS_DEVOPS_STATUS.md](docs/EVIDENCIAS_DEVOPS_STATUS.md) para a rubrica. Lean Canvas, testes com cidadãos e pitch também permanecem pendentes.
+**Próxima ação:** siga [docs/AZURE_TERRAFORM_DEPLOY.md](docs/AZURE_TERRAFORM_DEPLOY.md) para executar Terraform, publicar no Azure e colher evidências; o [guia do monitoramento](docs/MONITORAMENTO_GRAFANA.md) cobre o dashboard e o alerta. Lean Canvas validado, testes com cidadãos e pitch também permanecem pendentes.
 
 ## 1. Ficha Técnica Mestre (planejamento, preencher com evidências reais)
 
@@ -14,10 +14,10 @@
 | Cidadão e território | Pessoas que usam praças e espaços públicos; território piloto **a definir** |
 | Problema | Relatos de problemas em sinalizações e equipamentos urbanos podem ser difíceis de organizar/acompanhar; **hipótese a validar** |
 | Proposta de valor | Registrar e consultar ocorrências por protocolo e status interno |
-| Arquitetura | Flask (UI e API), SQLite, Docker/Compose, endpoint Prometheus; Terraform **pendente**; CI GitHub Actions **configurada, sem execução comprovada** |
+| Arquitetura | Flask (UI e API), SQLite, Docker/Compose, endpoint Prometheus; Terraform **código preparado, ainda sem provisionamento comprovado**; CI GitHub Actions **aprovada na execução #6 segundo evidência enviada pelo grupo** |
 | Fonte de dados | Ocorrências submetidas à aplicação para fins de teste; **não existe base oficial municipal** |
 | Modelos de IA | **Não implementados**; módulos externos ficam a cargo dos responsáveis |
-| URL pública / repositório | **A definir após publicação** |
+| URL pública / repositório | **Repositório: https://github.com/mathhfarias/zelabairro-gs2026 ; URL pública Azure a definir após deploy** |
 | Indicadores de impacto | **Não medidos**; planejar tempo de cadastro, conclusão e clareza |
 | ODS | ODS 11 sugerido; contribuição precisa ser justificada no trabalho final |
 
@@ -148,7 +148,7 @@ Status permitidos: `pendente`, `em_analise`, `concluido`.
 | Erros | `zelabairro_http_server_errors_total` | Contador de respostas HTTP 5xx |
 | Saturação (indicador inicial) | `zelabairro_http_in_flight_requests` | Requisições em andamento; complementar com recursos de infraestrutura |
 
-`GET /metrics` disponibiliza os dados em formato Prometheus. **O dashboard e o alerta disparado ainda não foram construídos.** A rubrica de DevOps exige evidência de ambos.
+`GET /metrics` disponibiliza os dados em formato Prometheus. **Dashboard e alerta têm arquivos preparados em `monitoring/`, mas ainda exigem execução e prints reais.** A rubrica de DevOps exige evidência de ambos.
 
 ## 8. Próximas etapas para cumprir a rubrica oficial (p. 39–41)
 
@@ -156,8 +156,8 @@ Status permitidos: `pendente`, `em_analise`, `concluido`.
 - [x] Dockerfile enxuto, usuário não root, Compose e volume persistente (arquivos criados; validar execução Docker).
 - [x] Instrumentação inicial das quatro métricas de ouro (código incluído; **executar e validar** no dashboard).
 - [ ] Provisionamento cloud real por Terraform; state e tfvars fora do repositório; rede administrativa restrita.
-- [x] Arquivo GitHub Actions preparado para executar a cada push: testes, build, Gitleaks, Semgrep e Trivy (**publicar e conferir runs reais**).
-- [ ] Bloquear um pipeline vulnerável e depois demonstrar a correção.
+- [x] Arquivo GitHub Actions preparado para executar a cada push: testes, build, Gitleaks, Semgrep e Trivy (**execução #6 aprovada segundo evidência do grupo**).
+- [x] Execuções bloqueadas por Semgrep/Trivy e posterior CI aprovada (#6): **guardar prints dos runs e diffs dos commits para o PDF**.
 - [ ] Deploy automático em infraestrutura Terraform com URL HTTPS pública.
 - [ ] Dashboard com quatro métricas e alerta demonstravelmente disparado.
 - [ ] Diagrama de arquitetura, responsabilidade compartilhada, LGPD, estimativa de custo.
@@ -183,3 +183,20 @@ Status permitidos: `pendente`, `em_analise`, `concluido`.
 - Grupo. **ZelaBairro — Documento de Alinhamento v0.3 (09/11/2026)**: definição do produto, jornada, contrato inicial e responsáveis.
 
 > Em caso de divergência, prevalecem o enunciado e as orientações do professor responsável.
+
+
+---
+
+## Extensão de cloud e observabilidade — Global Solution (19/11/2026)
+
+**Este pacote mantém o ZelaBairro como produto único para Secure DevOps e Startup.**
+
+- **GitHub Actions:** os jobs existentes de testes/Gitleaks/Semgrep/Trivy continuam; após aprovação na `main`, uma imagem Docker é publicada em GHCR. Com a variável `AZURE_WEBAPP_NAME`, o deploy via Azure OIDC é acionado automaticamente.
+- **Terraform:** pasta [`infra/`](infra/) provisiona RG, App Service Plan Linux B1 e Web App HTTPS com imagem GHCR, sem abrir portas administrativas.
+- **Banco SQLite:** no Azure, usar `/home/zelabairro.sqlite3` com storage persistente habilitado, validando permissões de escrita e retenção do protocolo após restart. Solução acadêmica de instância única, não banco de produção escalável.
+- **Métricas:** `/metrics` usa bearer token em produção; Grafana e Prometheus locais monitoram os dados pela URL pública e possuem regra de alerta controlado.
+- **Guia de infraestrutura:** [`docs/AZURE_TERRAFORM_DEPLOY.md`](docs/AZURE_TERRAFORM_DEPLOY.md).
+- **Guia de monitoramento:** [`docs/MONITORAMENTO_GRAFANA.md`](docs/MONITORAMENTO_GRAFANA.md).
+- **Checklist de evidências:** [`docs/CONFERENCIA_ENTREGA.md`](docs/CONFERENCIA_ENTREGA.md).
+
+**Não implementado automaticamente:** criação de recursos Azure, vínculo de identidade OIDC no Entra, registro público do GHCR, inserção de secrets e execução real do monitoramento. Exigem conta, permissões e provas de execução do grupo.

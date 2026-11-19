@@ -1,0 +1,147 @@
+{
+  "title": "ZelaBairro | Quatro métricas de ouro",
+  "uid": "zelabairro-golden",
+  "tags": [
+    "zelabairro",
+    "fiap",
+    "devops"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Tráfego — req/s",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "promzelabairro"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(zelabairro_http_requests_total[2m]))",
+          "refId": "A",
+          "legendFormat": "{{__name__}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Latência — p95 (s)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "promzelabairro"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(zelabairro_http_request_duration_seconds_bucket[5m])) by (le))",
+          "refId": "A",
+          "legendFormat": "{{__name__}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Erros HTTP 5xx — req/s",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "promzelabairro"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(zelabairro_http_server_errors_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{__name__}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Saturação — requisições em andamento",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "promzelabairro"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "zelabairro_http_in_flight_requests",
+          "refId": "A",
+          "legendFormat": "{{__name__}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    }
+  ]
+}

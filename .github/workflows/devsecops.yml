@@ -85,6 +85,7 @@ jobs:
             -e APP_ENV=production \
             -e SECRET_KEY="$TEST_SECRET" \
             -e ADMIN_PASSWORD='senha-descartavel-somente-ci' \
+            -e METRICS_TOKEN="$TEST_SECRET" \
             "$TEST_IMAGE" >/dev/null
           for i in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8765/health | grep -q '"status":"ok"'; then
@@ -114,4 +115,66 @@ jobs:
     needs: [unit-tests, gitleaks, semgrep, docker-trivy]
     steps:
       - name: Confirmar aprovacoes
-        run: echo 'Testes + Gitleaks + Semgrep + build Docker + Trivy aprovados. Deploy ainda nao configurado.'
+        run: echo 'Testes + Gitleaks + Semgrep + build Docker + Trivy aprovados. Publicacao e deploy em jobs separados.'
+
+
+  publicar-imagem:
+    name: Publicar imagem no GHCR
+    runs-on: ubuntu-24.04
+    needs: [ci-validada]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Autenticar GHCR pelo GITHUB_TOKEN
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publicar imagem versionada e latest
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+
+  deploy-azure:
+    name: Deploy automatico Azure App Service
+    runs-on: ubuntu-24.04
+    needs: [publicar-imagem]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AZURE_WEBAPP_NAME != ''
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Autenticar Azure sem senha via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publicar imagem aprovada do commit
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          images: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      - name: Testar URL HTTPS
+        env:
+          WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 24); do
+            if curl --fail --silent --show-error --max-time 10 "https://${WEBAPP_NAME}.azurewebsites.net/health" | grep -q '"status":"ok"'; then
+              echo "Deploy validado: https://${WEBAPP_NAME}.azurewebsites.net/health"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Healthcheck HTTPS falhou; consulte logs no App Service.'
+          exit 1

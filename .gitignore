@@ -16,3 +16,9 @@ htmlcov/
 *.tfvars
 .terraform/
 .DS_Store
+
+# Segredos e artefatos do Terraform/observabilidade
+monitoring/prometheus.yml
+monitoring/metrics_token
+monitoring/.env
+*.tfplan

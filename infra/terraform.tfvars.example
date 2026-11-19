@@ -1,0 +1,5 @@
+# Copie para terraform.tfvars localmente (NUNCA commitar)
+subscription_id = "SUBSTITUA_PELA_SUA_ASSINATURA"
+location        = "brazilsouth"
+# Se nao houver quota/regiao disponivel, tente eastus2 ou canadacentral.
+# sku_name      = "B1"

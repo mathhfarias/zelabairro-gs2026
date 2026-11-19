@@ -41,6 +41,13 @@ class ZelaBairroTests(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(1)
 
+    def test_metrics_token_access_control(self):
+        self.app.config["METRICS_TOKEN"] = "token-somente-para-os-testes"
+        self.assertEqual(self.client.get("/metrics").status_code, 403)
+        result = self.client.get("/metrics", headers={"Authorization": "Bearer token-somente-para-os-testes"})
+        self.assertEqual(result.status_code, 200)
+        self.assertIn(b"zelabairro_http_requests_total", result.data)
+
     def test_home_and_health(self):
         self.assertEqual(self.client.get("/").status_code, 200)
         self.assertEqual(self.client.get("/health").json, {"status": "ok"})

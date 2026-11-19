@@ -33,6 +33,7 @@ def create_app(test_config=None):
         DATABASE_PATH=data_path,
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-only-change-me"),
         ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD", ""),
+        METRICS_TOKEN=os.environ.get("METRICS_TOKEN", ""),
         APP_ENV=os.environ.get("APP_ENV", "development"),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
@@ -46,6 +47,8 @@ def create_app(test_config=None):
             raise RuntimeError("Defina SECRET_KEY forte antes de publicar.")
         if not app.config["ADMIN_PASSWORD"] or str(app.config["ADMIN_PASSWORD"]).startswith("SUBSTITUA_"):
             raise RuntimeError("Defina ADMIN_PASSWORD antes de publicar.")
+        if not app.config["METRICS_TOKEN"] or len(str(app.config["METRICS_TOKEN"])) < 24:
+            raise RuntimeError("Defina METRICS_TOKEN aleatorio e longo antes de publicar.")
 
     app.jinja_env.globals.update(categories=CATEGORIES, statuses=STATUSES)
     app.teardown_appcontext(close_db)

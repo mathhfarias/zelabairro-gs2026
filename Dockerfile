@@ -1,10 +1,12 @@
 FROM python:3.12-slim-trixie
+LABEL org.opencontainers.image.source="https://github.com/mathhfarias/zelabairro-gs2026"
 
+# Atualizar zlib1g do Debian antes de instalar a aplicação.
+# O Trivy continua bloqueando qualquer CVE HIGH/CRITICAL corrigível.
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends --only-upgrade zlib1g; \
     rm -rf /var/lib/apt/lists/*
-    
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DATABASE_PATH=/data/zelabairro.sqlite3 \

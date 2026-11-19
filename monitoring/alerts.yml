@@ -1,0 +1,11 @@
+groups:
+  - name: zelabairro
+    rules:
+      - alert: ZelaBairroEndpointIndisponivel
+        expr: up{job="zelabairro"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "ZelaBairro sem resposta de /metrics"
+          description: "Alerta de indisponibilidade real do alvo monitorado. Teste controlado no README."

@@ -31,7 +31,6 @@ def csrf_token():
 def csrf_valid():
     expected = session.get("csrf_token", "")
     supplied = request.form.get("csrf_token", "")
-
     if not expected or not supplied:
         return False
 
@@ -128,6 +127,11 @@ def health():
 
 @bp.get("/metrics")
 def metrics():
+    expected = current_app.config.get("METRICS_TOKEN", "")
+    if expected:
+        supplied = request.headers.get("Authorization", "")
+        if not hmac.compare_digest(supplied, "Bearer " + expected):
+            abort(403)
     return Response(generate_latest(), content_type=CONTENT_TYPE_LATEST)
 
 
