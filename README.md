@@ -1,7 +1,5 @@
 # ZelaBairro — MVP CitizenTech (FIAP GS 2026.2)
 
-> **Um só produto para as sete disciplinas.** Este repositório inicia a aplicação central utilizada por **Secure DevOps Tools & Cloud Computing** (Cleórbete Santos) e **Business Intelligence & Startup Development** (Henio Scheidt). As evidências e entregáveis de cada disciplina são distintos.
-
 **Status (v0.3 — 19/11/2026):** MVP validado localmente pelo grupo; **CI de GitHub Actions com testes, Gitleaks, Semgrep, Docker/Trivy e gate aprovados** conforme captura da execução #6 (commit `1b3cad7`). Esta extensão inclui **código preparado** de Terraform, publicação no GHCR, deploy OIDC e monitoramento, **ainda sem implantação Azure ou dashboard/alerta comprovados**. Não representa a conclusão automática das disciplinas.
 
 **Próxima ação:** siga [docs/AZURE_TERRAFORM_DEPLOY.md](docs/AZURE_TERRAFORM_DEPLOY.md) para executar Terraform, publicar no Azure e colher evidências; o [guia do monitoramento](docs/MONITORAMENTO_GRAFANA.md) cobre o dashboard e o alerta. Lean Canvas validado, testes com cidadãos e pitch também permanecem pendentes.
