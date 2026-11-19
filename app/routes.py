@@ -38,9 +38,6 @@ def csrf_valid():
     return hmac.compare_digest(expected, supplied)
 
 
-return hmac.compare_digest(expected, supplied)
-
-
 @bp.app_context_processor
 def inject_csrf():
     return {"csrf_token": csrf_token}
