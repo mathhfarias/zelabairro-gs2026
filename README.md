@@ -1,204 +1,247 @@
-# ZelaBairro — MVP CitizenTech (FIAP GS 2026.2)
+# ZelaBairro — Plataforma Colaborativa de Ocorrências Urbanas
 
-**Status (v0.3 — 19/11/2026):** MVP validado localmente pelo grupo; **CI de GitHub Actions com testes, Gitleaks, Semgrep, Docker/Trivy e gate aprovados** conforme captura da execução #6 (commit `1b3cad7`). Esta extensão inclui **código preparado** de Terraform, publicação no GHCR, deploy OIDC e monitoramento, **ainda sem implantação Azure ou dashboard/alerta comprovados**. Não representa a conclusão automática das disciplinas.
+**FIAP · Engenharia de Software · 4º ano · Global Solution 2026.2**  
+**Desafio:** CitizenTech  
+**Disciplina:** Secure DevOps Tools & Cloud Computing — Prof. Cleórbete Santos  
+**Projeto:** ZelaBairro — Deploy Blindado
 
-**Próxima ação:** siga [docs/AZURE_TERRAFORM_DEPLOY.md](docs/AZURE_TERRAFORM_DEPLOY.md) para executar Terraform, publicar no Azure e colher evidências; o [guia do monitoramento](docs/MONITORAMENTO_GRAFANA.md) cobre o dashboard e o alerta. Lean Canvas validado, testes com cidadãos e pitch também permanecem pendentes.
+## Equipe
 
-## 1. Ficha Técnica Mestre (planejamento, preencher com evidências reais)
-
-| Campo | Situação atual |
+| Integrante | RM |
 | --- | --- |
-| Produto | ZelaBairro — Plataforma Colaborativa de Ocorrências Urbanas |
-| Cidadão e território | Pessoas que usam praças e espaços públicos; território piloto **a definir** |
-| Problema | Relatos de problemas em sinalizações e equipamentos urbanos podem ser difíceis de organizar/acompanhar; **hipótese a validar** |
-| Proposta de valor | Registrar e consultar ocorrências por protocolo e status interno |
-| Arquitetura | Flask (UI e API), SQLite, Docker/Compose, endpoint Prometheus; Terraform **código preparado, ainda sem provisionamento comprovado**; CI GitHub Actions **aprovada na execução #6 segundo evidência enviada pelo grupo** |
-| Fonte de dados | Ocorrências submetidas à aplicação para fins de teste; **não existe base oficial municipal** |
-| Modelos de IA | **Não implementados**; módulos externos ficam a cargo dos responsáveis |
-| URL pública / repositório | **Repositório: https://github.com/mathhfarias/zelabairro-gs2026 ; URL pública Azure a definir após deploy** |
-| Indicadores de impacto | **Não medidos**; planejar tempo de cadastro, conclusão e clareza |
-| ODS | ODS 11 sugerido; contribuição precisa ser justificada no trabalho final |
+| Matheus Farias de Lima | 554254 |
+| Miguel Mauricio Parrado Patarroyo | 554007 |
+| Vitor Pinheiro Nascimento | 553693 |
+| Gabriel Leão | 552642 |
+| Pedro Henrique Nardaci Chaves | 553988 |
 
-## 2. O que funciona nesta versão
+## Acessos
 
-1. `GET /` — página inicial e explicação da proposta.
-2. `GET/POST /registrar` — registro de uma ocorrência, com validação no servidor, token CSRF e protocolo único não sequencial.
-3. `GET /consulta?protocolo=OC-...` — busca pelo protocolo.
-4. `GET /ocorrencia/<id>` — consulta do registro e status interno, mesmo após atualizar a página.
-5. `GET /api/ocorrencias/<id>` — JSON que outras disciplinas podem consumir.
-6. `GET /admin/login` — área administrativa protegida com senha definida por variável de ambiente.
-7. `GET /admin` — lista das últimas 200 ocorrências; atualização de status via POST (CSRF).
-8. `GET /admin/export.csv` — CSV com todas as ocorrências, acessível somente após autenticação.
-9. `GET /health` — saúde básica da aplicação e conexão com o banco.
-10. `GET /metrics` — métricas HTTP Prometheus de tráfego, latência, erros 5xx e requisições em andamento.
+| Recurso | Endereço |
+| --- | --- |
+| MVP publicado | https://zelabairro-gs2026-mathh.onrender.com/ |
+| Código-fonte | https://github.com/mathhfarias/zelabairro-gs2026 |
+| Pipeline de CI/CD | https://github.com/mathhfarias/zelabairro-gs2026/actions |
+| Documentação da infraestrutura | [`infra-render/`](infra-render/) |
+| Configuração de monitoramento | [`monitoring/`](monitoring/) |
 
-O status `concluido` significa **fechado no fluxo de demonstração**, não reparo físico ou atendimento público.
+## 1. Visão geral e ficha técnica do MVP
 
-## 3. Como rodar no Mac (VS Code)
+O ZelaBairro é uma aplicação web para o registro e o acompanhamento demonstrativo de ocorrências urbanas, como problemas de sinalização, calçadas e mobiliário público. O cidadão informa a categoria, o local e a descrição, recebe um protocolo e pode consultar o status do registro. A administração da plataforma possui área interna autenticada para visualização, exportação e atualização do status.
 
-Requisitos: Python 3.11+ e Git. No terminal, dentro desta pasta:
+A proposta está alinhada ao desafio CitizenTech e ao ODS 11 — Cidades e Comunidades Sustentáveis. Trata-se de um **MVP acadêmico**, sem integração ou vínculo oficial com prefeitura, serviços de fiscalização ou órgãos municipais. Um status concluído na aplicação corresponde ao fluxo interno de demonstração, e não comprova reparo físico.
+
+| Campo | Implementação |
+| --- | --- |
+| Linguagem e framework | Python 3.12, Flask e Gunicorn |
+| Interface | Páginas HTML renderizadas com Jinja |
+| Persistência | SQLite; banco em `/data/zelabairro.sqlite3` na nuvem |
+| Containers | Docker, Docker Compose e execução com usuário não root |
+| Nuvem | Render Web Service, plano Starter, região Ohio |
+| Infraestrutura como código | Terraform, provider `render-oss/render` |
+| Volume persistente | Disco de 1 GB montado em `/data` |
+| Integração contínua | GitHub Actions, testes Flask, Gitleaks, Semgrep, Trivy e gate de qualidade |
+| Registro de imagens | GitHub Container Registry (GHCR) |
+| Entrega contínua | GitHub Actions → Render Deploy Hook, após os checks aprovados |
+| Monitoramento | Prometheus e Grafana locais, consultando `/metrics` na Render |
+| Alerta | `ZelaBairroEndpointIndisponivel`, com condição de indisponibilidade por 30 segundos |
+| Segurança | Variáveis de ambiente, autenticação administrativa, CSRF, validação, cookies seguros e varredura de vulnerabilidades |
+
+## 2. Funcionalidades e endpoints
+
+| Rota | Função |
+| --- | --- |
+| `/` | Página inicial e apresentação da proposta |
+| `/registrar` | Cadastro de ocorrência com validação e CSRF |
+| `/consulta` | Consulta por protocolo |
+| `/ocorrencia/<protocolo>` | Visualização da ocorrência e do status interno |
+| `/api/ocorrencias/<protocolo>` | Consulta JSON pelo protocolo |
+| `/admin/login` | Autenticação administrativa |
+| `/admin` | Listagem e atualização de status, após autenticação |
+| `/admin/export.csv` | Exportação CSV pela área administrativa |
+| `/health` | Healthcheck da aplicação e do banco de dados |
+| `/metrics` | Métricas Prometheus protegidas por Bearer Token na produção |
+
+As categorias cadastráveis são `sinalizacao`, `mobiliario`, `calcada` e `outros`. Os estados internos são `pendente`, `em_analise` e `concluido`. O protocolo tem o formato `OC-XXXXXXXXXXXX`, com identificador aleatório hexadecimal.
+
+## 3. Arquitetura
+
+```text
+[Cidadão / navegador]
+         |
+         | HTTPS
+         v
+[Render Web Service — Docker / Flask / Gunicorn]
+         |                          |
+         | SQLite                  | /health e /metrics (Bearer Token)
+         v                          v
+[Disco persistente /data]    [Prometheus local] --> [Grafana local]
+
+[GitHub — main] --> [GitHub Actions — Testes, Gitleaks, Semgrep, Trivy]
+                                        |
+                                        v
+                                 [Gate aprovado]
+                                        |
+                              +---------+---------+
+                              |                   |
+                              v                   v
+                      [Imagem no GHCR]      [Render Deploy Hook]
+                                                  |
+                                                  v
+                                          [Deploy do Web Service]
+
+[Terraform / infra-render] --> [Web Service e disco de 1 GB]
+```
+
+O serviço utiliza HTTPS fornecido pela Render, expõe apenas o endpoint da aplicação e não publica uma porta administrativa de infraestrutura. O banco SQLite fica em volume persistente associado ao serviço. A configuração do disco é demonstrada no Terraform; o uso de banco relacional gerenciado e múltiplas instâncias não faz parte do escopo desta versão.
+
+## 4. Execução local com Python
+
+**Requisitos:** Git e Python 3.11 ou superior.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-```
-
-Crie variáveis para a execução local, em **sua sessão do terminal** (não são senhas reais):
-
-```bash
 export APP_ENV=development
 export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-export ADMIN_PASSWORD="escolha-uma-senha-forte-para-os-testes"
+export ADMIN_PASSWORD="defina-uma-senha-local-forte"
 python -m flask --app wsgi run --debug
 ```
 
-Abra **http://127.0.0.1:5000** e teste Registrar → Consultar. A área administrativa fica em `/admin`. O arquivo de banco é criado automaticamente em `instance/zelabairro.sqlite3` e **não deve ser enviado ao GitHub**.
+Abra `http://127.0.0.1:5000`. No ambiente de desenvolvimento, o SQLite é criado dentro de `instance/` quando não há outra configuração de `DATABASE_PATH`.
 
-Para testes automatizados:
+Para executar os testes:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-## 4. Como rodar com Docker Compose (desenvolvimento/validação)
+## 5. Execução com Docker Compose
 
-Requisitos: Docker Engine ou Docker Desktop e Docker Compose v2.
+**Requisitos:** Docker Desktop ou Docker Engine com Docker Compose.
 
 ```bash
 cp .env.example .env
-python3 -c 'import secrets; print(secrets.token_hex(32))'
 ```
 
-Coloque a chave gerada no campo `SECRET_KEY` dentro do `.env` e defina uma senha forte e exclusiva em `ADMIN_PASSWORD`. **Nunca comite `.env`**. Em seguida:
+Configure `SECRET_KEY` e `ADMIN_PASSWORD` no `.env` local. Em seguida:
 
 ```bash
 docker compose up --build -d
 docker compose ps
-docker compose logs -f app
+docker compose logs --tail=80 app
 ```
 
-Acesse **http://localhost:8000**. Este Compose usa `APP_ENV=development` apenas para testes locais HTTP. Antes de disponibilizar na Internet, use `APP_ENV=production`, HTTPS, secrets fortes e políticas de firewall.
+A aplicação ficará disponível em `http://127.0.0.1:8000`. Para interromper, utilize `docker compose down`. O volume nomeado mantém os dados entre recriações comuns dos containers; `docker compose down -v` também remove os volumes.
 
-Para verificar volume persistente:
+O Dockerfile utiliza uma imagem Python slim, instala dependências sem cache, executa o processo com usuário não root e possui healthcheck. Na etapa de CI, o container é testado com sistema de arquivos somente leitura, diretório temporário específico e capacidades restritas.
+
+## 6. Infraestrutura como código — Render
+
+O diretório `infra-render/` define o Web Service do ZelaBairro em Docker, plano Starter, região Ohio, disco de 1 GB e variáveis de ambiente. O endpoint público é:
+
+https://zelabairro-gs2026-mathh.onrender.com/
+
+Com Terraform instalado e credenciais de Render disponíveis **somente no ambiente local**, os comandos de referência são:
 
 ```bash
-docker compose down
-docker compose up -d
+cd infra-render
+terraform init
+terraform validate
+terraform plan -out=render.tfplan
+terraform apply render.tfplan
 ```
 
-O volume nomeado `zelabairro_data` permanece. **Não use `down -v`** se quiser preservar os dados.
+A criação inicial foi concluída por `terraform apply`, com um recurso adicionado. Os arquivos `terraform.tfstate`, `*.tfvars` e `*.tfplan` são excluídos do versionamento, pois podem conter informações sensíveis. A extensão `infra/` contém a alternativa de infraestrutura Azure; o ambiente publicado nesta entrega é a Render.
 
-Para encerrar: `docker compose down`.
+O deploy contínuo foi realizado pelo **Render Deploy Hook** após a aprovação do pipeline de segurança. Como o acionamento foi configurado adicionalmente ao Terraform, alterações futuras na infraestrutura exigem conciliar a configuração do provider Render com as opções atualizadas no serviço.
 
-> **Atenção:** O Compose limita a publicação a `127.0.0.1:8000` e não é um deploy público. Para publicação, adotar proxy HTTPS, `APP_ENV=production`, firewall e controle de acesso. Em produção o cookie de sessão tem a marca `Secure`.
+## 7. Pipeline DevSecOps
 
-## 5. Contrato de dados (versão inicial)
+O workflow em `.github/workflows/devsecops.yml` é executado nos eventos de push, pull request e por acionamento manual. O fluxo inclui:
 
-Uma ocorrência segue o dicionário do planejamento do grupo, com o campo `id` como protocolo público:
+1. Testes automatizados Flask e validação de sintaxe Python.
+2. Gitleaks para detectar credenciais expostas no repositório.
+3. Semgrep para análise estática de segurança do código Python.
+4. Build Docker, smoke test em container e Trivy para CVEs altas/críticas corrigíveis.
+5. Gate de qualidade dependente da aprovação dos testes e scanners.
+6. Publicação da imagem aprovada no GHCR, para pushes na `main`.
+7. Acionamento do Deploy Hook da Render com URL armazenada no GitHub Actions Secret `RENDER_DEPLOY_HOOK_URL`.
 
-```json
-{
-  "id": "OC-A1B2C3D4E5F6",
-  "categoria": "sinalizacao",
-  "local": "Praça Exemplo",
-  "descricao": "Placa com suporte danificado",
-  "status": "pendente",
-  "data": "2026-11-13T14:00:00+00:00",
-  "data_atualizacao": "2026-11-13T14:00:00+00:00"
-}
-```
+O histórico registra execuções que foram bloqueadas durante os ajustes de Semgrep e Trivy, seguidas de execuções aprovadas. Na implantação demonstrada, a Render registrou o commit `eacf574`, acionado por **Deploy Hook**, com estado **Live** em 19/11/2026.
 
-**Este JSON é ilustrativo, não dado real.** Campos podem ser adicionados pelos módulos, desde que o grupo aprove o contrato e preserve compatibilidade. Nesta versão, não há foto, OCR, IA generativa ou RPA integrados.
+**Segredos e dados locais** nunca devem ser incluídos em commits: `.env`, `monitoring/.env`, `monitoring/metrics_token`, `*.tfvars`, `*.tfstate`, `*.tfplan` e tokens de provedores.
 
-Categorias permitidas: `sinalizacao`, `mobiliario`, `calcada`, `outros`.
-Status permitidos: `pendente`, `em_analise`, `concluido`.
+## 8. Observabilidade e teste de alerta
 
-### Integrações futuras
+O endpoint `/metrics` utiliza a biblioteca `prometheus_client` e expõe as seguintes séries:
 
-- **Big Data:** extrair ocorrências via CSV administrativo (sem credenciais no código) e gerar indicadores reais.
-- **Computer Vision:** acrescentar imagem autorizada e um campo de texto extraído após implementação do módulo.
-- **Generative AI:** sugerir descrição e categoria, sempre com confirmação humana.
-- **RPA:** consumir fila de triagem e devolver retorno interno; sem dizer que se trata de protocolo oficial.
-- **Maker Lab:** relacionar o objeto redesenhado a uma ocorrência.
-- **Startup:** demonstrar registro e consulta no pitch; medir valor com usuários reais e consentimento.
-
-## 6. Segurança já considerada
-
-- SQL parametrizado e escaping HTML automático (Jinja).
-- Proteção CSRF nos formulários POST.
-- Autenticação da área administrativa por senha de ambiente; sem senha hardcoded para produção.
-- Cookies de sessão HttpOnly, SameSite Lax e Secure no perfil `production`.
-- Cabeçalhos `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
-- Limite total de corpo de requisição de 64 KB; sem upload de imagens na versão 1.
-- Sem coleta de nome, CPF, e-mail ou geolocalização pessoal.
-- Banco persistente, Dockerfile com usuário não root, sistema de arquivos do container como somente leitura e volume dedicado.
-- Sanitização de valores potencialmente interpretáveis como fórmulas na exportação CSV.
-
-**Limites desta versão:** não há rate limiting distribuído, MFA, auditoria de admin ou política formal de retenção. A consulta por protocolo expõe local e descrição; não incluir dados pessoais ou relatos sensíveis. Não publicar dados de testes identificáveis sem autorização. O endpoint `/metrics` está público; restringir sua exposição ao publicar em ambiente real, se necessário. Esta versão não foi auditada para uso em produção.
-
-## 7. Métricas já instrumentadas
-
-| Categoria das 4 métricas de ouro | Métrica instrumentada | Observação |
+| Sinal | Métrica | Painel |
 | --- | --- | --- |
-| Tráfego | `zelabairro_http_requests_total` | Contador por rota/método/status |
-| Latência | `zelabairro_http_request_duration_seconds` | Histograma por rota/método |
-| Erros | `zelabairro_http_server_errors_total` | Contador de respostas HTTP 5xx |
-| Saturação (indicador inicial) | `zelabairro_http_in_flight_requests` | Requisições em andamento; complementar com recursos de infraestrutura |
+| Tráfego | `zelabairro_http_requests_total` | Requisições por segundo |
+| Latência | `zelabairro_http_request_duration_seconds` | Percentil p95 em segundos |
+| Erros | `zelabairro_http_server_errors_total` | Erros HTTP 5xx por segundo |
+| Saturação (indicador de concorrência) | `zelabairro_http_in_flight_requests` | Requisições simultâneas |
 
-`GET /metrics` disponibiliza os dados em formato Prometheus. **Dashboard e alerta têm arquivos preparados em `monitoring/`, mas ainda exigem execução e prints reais.** A rubrica de DevOps exige evidência de ambos.
+O Prometheus e o Grafana são executados localmente com Docker Compose em `monitoring/`, apontando para a URL pública HTTPS. O arquivo `metrics_token` é utilizado para autenticação na coleta e não pode ser versionado.
 
-## 8. Próximas etapas para cumprir a rubrica oficial (p. 39–41)
+```bash
+cd monitoring
+cp prometheus.yml.example prometheus.yml
+cp .env.example .env
+# Configure o alvo HTTPS em prometheus.yml, a senha do Grafana em .env
+# e o token de monitoramento no arquivo privado metrics_token.
+docker compose up -d
+docker compose ps
+```
 
-- [x] Código-base da aplicação central com testes automatizados escritos (**executar testes antes de demonstrar funcionamento**).
-- [x] Dockerfile enxuto, usuário não root, Compose e volume persistente (arquivos criados; validar execução Docker).
-- [x] Instrumentação inicial das quatro métricas de ouro (código incluído; **executar e validar** no dashboard).
-- [ ] Provisionamento cloud real por Terraform; state e tfvars fora do repositório; rede administrativa restrita.
-- [x] Arquivo GitHub Actions preparado para executar a cada push: testes, build, Gitleaks, Semgrep e Trivy (**execução #6 aprovada segundo evidência do grupo**).
-- [x] Execuções bloqueadas por Semgrep/Trivy e posterior CI aprovada (#6): **guardar prints dos runs e diffs dos commits para o PDF**.
-- [ ] Deploy automático em infraestrutura Terraform com URL HTTPS pública.
-- [ ] Dashboard com quatro métricas e alerta demonstravelmente disparado.
-- [ ] Diagrama de arquitetura, responsabilidade compartilhada, LGPD, estimativa de custo.
-- [ ] PDF único com links clicáveis e prints reais de todas as evidências.
+Acessos locais:
 
-### Startup (Henio, p. 31–34)
+- Prometheus: http://127.0.0.1:9090/targets
+- Alertas: http://127.0.0.1:9090/alerts
+- Grafana: http://127.0.0.1:3000
 
-- [ ] Validar problema, público e território piloto.
-- [ ] Consolidar **9 blocos do Lean Canvas** e distinguir validação real vs. hipótese.
-- [ ] Documentar transição desde CP1 se a ideia anterior era diferente.
-- [ ] Modelo de negócio com proposta de valor, fontes de receita, preço, canais e métricas.
-- [ ] Testar a jornada do MVP com usuários reais e registrar resultados.
-- [ ] Vídeo-pitch **até 5 minutos**, todos participam, com demonstração do mesmo MVP.
-- [ ] PDF único com Canvas, negócio e links clicáveis de vídeo, MVP e GitHub.
+Em 19/11/2026, o Prometheus registrou o alvo `zelabairro` em estado **UP** e o Grafana exibiu os quatro painéis, incluindo erros HTTP 5xx com valor zero. A regra `ZelaBairroEndpointIndisponivel`, definida em `monitoring/alerts.yml`, foi exercitada por uma simulação controlada de falha na coleta e atingiu o estado **FIRING** após 30 segundos. Após a restauração do endpoint monitorado, o alvo voltou ao estado **UP**. A simulação foi realizada na configuração local do Prometheus, sem indisponibilizar a aplicação pública.
 
-## 9. Entrega e prazo
+## 9. Segurança e LGPD
 
-**Data no enunciado oficial:** 19/11/2026, às 23h55. Links públicos acessíveis durante a correção; um único envio por disciplina. Cada disciplina exige seus próprios entregáveis. Não considerar a criação deste repositório como a conclusão de qualquer disciplina.
+O cadastro exige apenas local público, categoria e descrição da ocorrência, sem solicitar nome, CPF ou e-mail. Dados pessoais inseridos indevidamente nos campos livres podem, contudo, aparecer nas consultas por protocolo; o ambiente não deve receber relatos pessoais sensíveis. O banco e o volume são administrados pelo projeto e hospedados na infraestrutura da Render.
 
-## 10. Referências
+Controles implementados: validação no servidor, consultas SQLite parametrizadas, escaping de templates, CSRF, área administrativa com sessão autenticada, cookies HttpOnly/SameSite, cookie Secure em produção, cabeçalhos de proteção, exportação CSV com mitigação de fórmulas e acesso ao endpoint de métricas mediante token.
 
-- FIAP. **Desafio FIAP: CitizenTech — Engenharia de Software, 4º ano, Global Solution 2026.2**: páginas 18–24, 31–34 e 39–41.
-- Grupo. **ZelaBairro — Documento de Alinhamento v0.3 (09/11/2026)**: definição do produto, jornada, contrato inicial e responsáveis.
+Na responsabilidade compartilhada, a Render gerencia a infraestrutura subjacente; o projeto gerencia aplicação, credenciais, lógica de acesso, dados, cópias de segurança, uso adequado e tratamento de eventuais incidentes. O MVP não implementa autenticação individual de cidadãos, auditoria administrativa avançada ou alta disponibilidade.
 
-> Em caso de divergência, prevalecem o enunciado e as orientações do professor responsável.
+## 10. Estimativa de custo
 
+| Recurso | Estimativa mensal |
+| --- | ---: |
+| Render Web Service — Starter | US$ 7,00 |
+| Disco persistente — 1 GB | US$ 0,25 |
+| **Total de referência** | **US$ 7,25** |
 
----
+Valores de referência, sujeitos a regras de faturamento, impostos e eventuais alterações do provedor. Prometheus e Grafana foram executados localmente durante a demonstração.
 
-## Extensão de cloud e observabilidade — Global Solution (19/11/2026)
+## 11. Organização do repositório
 
-**Este pacote mantém o ZelaBairro como produto único para Secure DevOps e Startup.**
+```text
+app/                       Aplicação Flask, rotas e banco
+.github/workflows/         Pipeline GitHub Actions
+.semgrep/                  Regras de análise estática
+infra-render/              Terraform do ambiente Render implantado
+infra/                     Alternativa Terraform para Azure
+monitoring/                Prometheus, Grafana, dashboard e alertas
+docs/                      Guias e documentação do projeto
+tests/                     Testes automatizados
+Dockerfile                 Imagem de produção
+compose.yaml               Execução local da aplicação
+render.yaml                Configuração auxiliar de publicação
+requirements.txt           Dependências Python
+wsgi.py                    Ponto de entrada Gunicorn
+```
 
-- **GitHub Actions:** os jobs existentes de testes/Gitleaks/Semgrep/Trivy continuam; após aprovação na `main`, uma imagem Docker é publicada em GHCR. Com a variável `AZURE_WEBAPP_NAME`, o deploy via Azure OIDC é acionado automaticamente.
-- **Terraform:** pasta [`infra/`](infra/) provisiona RG, App Service Plan Linux B1 e Web App HTTPS com imagem GHCR, sem abrir portas administrativas.
-- **Banco SQLite:** no Azure, usar `/home/zelabairro.sqlite3` com storage persistente habilitado, validando permissões de escrita e retenção do protocolo após restart. Solução acadêmica de instância única, não banco de produção escalável.
-- **Métricas:** `/metrics` usa bearer token em produção; Grafana e Prometheus locais monitoram os dados pela URL pública e possuem regra de alerta controlado.
-- **Guia de infraestrutura:** [`docs/AZURE_TERRAFORM_DEPLOY.md`](docs/AZURE_TERRAFORM_DEPLOY.md).
-- **Guia de monitoramento:** [`docs/MONITORAMENTO_GRAFANA.md`](docs/MONITORAMENTO_GRAFANA.md).
-- **Checklist de evidências:** [`docs/CONFERENCIA_ENTREGA.md`](docs/CONFERENCIA_ENTREGA.md).
+## 12. Entrega acadêmica
 
-**Não implementado automaticamente:** criação de recursos Azure, vínculo de identidade OIDC no Entra, registro público do GHCR, inserção de secrets e execução real do monitoramento. Exigem conta, permissões e provas de execução do grupo.
+A demonstração técnica reúne o MVP público, a implementação em Docker, a infraestrutura provisionada via Terraform, o fluxo CI/CD, o dashboard das quatro métricas de ouro e a simulação de alerta. As capturas de tela, o diagrama, a análise de responsabilidades e a estimativa de custo constam no documento **ZelaBairro — Secure DevOps Tools & Cloud Computing**, entregue em PDF.
 
-Deploy em nuvem com Terraform e CI/CD validado na GS 2026.2.
-
-Validação final do deploy automático — GS 2026.2.
+**Referências do projeto:** enunciado FIAP Global Solution 2026.2 — CitizenTech, especialmente as páginas 39–41; documento de alinhamento do grupo ZelaBairro.
